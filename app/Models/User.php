@@ -2,31 +2,54 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Model
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    protected $table = 'users';
+    protected $primaryKey = 'user_id';
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public $timestamps = false;
+
+    protected $fillable = [
+        'role_id',
+        'name',
+        'email',
+        'phone',
+    ];
+
+    public function role()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
+    public function reportedIssues()
+    {
+        return $this->hasMany(Issue::class, 'reported_by_user_id', 'user_id');
+    }
+
+    public function assignedIssues()
+    {
+        return $this->hasMany(Issue::class, 'assigned_technician_id', 'user_id');
+    }
+
+    public function generatedReports()
+    {
+        return $this->hasMany(ManagementReport::class, 'generated_by', 'user_id');
+    }
+
+    public function issueUpdates()
+    {
+        return $this->hasMany(IssueUpdate::class, 'user_id', 'user_id');
+    }
+
+    public function sharedReports()
+    {
+        return $this->hasMany(ReportShare::class, 'shared_by', 'user_id');
+    }
+
+    public function maintenanceTasks()
+    {
+        return $this->hasMany(MaintenanceTask::class, 'technician_id', 'user_id');
     }
 }
